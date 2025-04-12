@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 19:01:55 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/09 18:25:42 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/12 20:17:36 by adrianafern      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,8 +73,7 @@ int	atoi_limit(const char *nptr)
 	i = 0;
 	if (is_space(&i, nptr) == 1)
 	{
-		printf("num of philosp - time die - time eat - time sleep
-			- [num meals]\n");
+		printf("philos - t die - t eat - t sleep - [meals]\n");
 		exit(1);
 	}
 	sign = is_sign(&i, nptr);
@@ -87,8 +86,7 @@ int	atoi_limit(const char *nptr)
 	number *= sign;
 	if (number > 2147483647 || number < 0)
 	{
-		printf("num of philosp - time die - time eat - time sleep
-			- [num meals]\n");
+		printf("philos - t die - t eat - t sleep - [meals]\n");
 		exit(1);
 	}
 	return ((int)number);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:23:42 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/09 17:50:19 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/12 20:57:11 by adrianafern      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,16 +25,20 @@ typedef struct s_data
 	int		num_philos;
 	int     time_eat; // tiempo que ocupa los tenedores
 	int		time_sleep;
-	int		time_die;
-	// tiempo para empezar a comer desde ultima comida/inicio programa
+	int		time_die; // tiempo para empezar a comer desde ultima comida/inicio programa
 	int		num_meals;
+	t_philo *philos;
+	pthread_mutex_t *forks;
 }			t_data;
 
 typedef struct s_philo
 {
 	int		id;
+	int meals_eaten;
+	pthread_t thread;
+	pthread_mutex_t *fork1; //lock first
+	pthread_mutex_t *fork2;
 	t_data	*info;
-
 }			t_philo;
 
 // comer -> dormir -> pensar
