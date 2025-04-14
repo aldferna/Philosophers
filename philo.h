@@ -6,7 +6,7 @@
 /*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:23:42 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/14 10:29:22 by adrianafern      ###   ########.fr       */
+/*   Updated: 2025/04/14 19:33:45 by adrianafern      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,13 @@ typedef struct s_data
 	int		time_sleep;
 	int		time_die; // tiempo para empezar a comer desde ultima comida/inicio programa
 	int		num_meals;
-	t_philo *philos; //array t_philos
+	struct s_philo *philos; //array t_philos
 	pthread_mutex_t *forks; //array mutex forks
 	pthread_t dead_checker; //hilo monitor
-	pthread_mutex_t write_mut; //mutex por ''variable'' o resource
+	pthread_mutex_t stdout_mut; //para no colapsar stdout con printf
+	pthread_mutex_t meals_death_mut; //para que el monitor lea ok
+	//pthread_mutex_t death_mut;
+	int someone_died;
 }			t_data;
 
 typedef struct s_philo
@@ -48,7 +51,8 @@ typedef struct s_philo
 // comer -> dormir -> pensar
 
 //	PROJECT UTILS
-
+long get_time(t_data *info);
+void print_message(t_philo *philo, char *str);
 
 //  BASIC UTILS 
 int			atoi_limit(const char *nptr);

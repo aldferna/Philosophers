@@ -6,22 +6,17 @@
 /*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/14 11:42:15 by adrianafern      ###   ########.fr       */
+/*   Updated: 2025/04/14 21:31:53 by adrianafern      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-int philo_death()
-{
-	//un filósofo muere si pasa más tiempo sin comer que time_die
-}
-
 void print_message(t_philo *philo, char *str) //con los mutex
 {
-	pthread_mutex_lock(&philo->info->write_mut);
-	printf("%lg   %d %s\n", get_time(philo->info), philo->id, str);
-	pthread_mutex_unlock(&philo->info->write_mut);
+	pthread_mutex_lock(&philo->info->stdout_mut);
+	printf("%ld   %d %s\n", get_time(philo->info), philo->id, str);
+	pthread_mutex_unlock(&philo->info->stdout_mut);
 }
 
 long get_time(t_data *info)
@@ -34,16 +29,86 @@ long get_time(t_data *info)
 	gettimeofday(&time, NULL);
 	seconds = time.tv_sec;
 	microsecs = time.tv_usec;
-	milisecs_passed = ((seconds * 1000) + (microsecs / 1000)) - info->time_start;
+	milisecs_passed = ((seconds * 1000) + (microsecs / 1000)) - info->start_time;
 	return(milisecs_passed);
+}
+
+void precise_sleep(long time_in_ms, t_data *info) //puede fallar si la espera es muy larga
+{
+    long waiting_started;
+
+	waiting_started = get_time(info);
+    while (get_time(info) - waiting_started < time_in_ms)
+        usleep(100);
+}
+
+void clean_resources(t_data *info)
+{
+    int i;
+    
+	i = 0;
+	while (i < info->num_philos)
+	{
+		pthread_mutex_destroy(&info->forks[i]);
+		//free(&info->philos[i]);
+		i++;
+	}
+    pthread_mutex_destroy(&info->stdout_mut);
+    pthread_mutex_destroy(&info->meals_death_mut);
+	//pthread_mutex_destroy(&info->death_mut);
+    free(info->forks);
+    free(info->philos);
+}
+
+void *philo_death(void *arg)
+{
+	t_data *info;
+	int i;
+
+	info = (t_data *)arg;
+	i = 0;
+	while(1)
+	{
+		pthread_mutex_lock(&info->meals_death_mut);
+/* 		if (info->someone_died)
+		{
+			pthread_mutex_unlock(&info->meals_death_mut);
+			return NULL;
+		} */
+		if (get_time(info) - info->philos[i].last_meal_time >= info->time_die) //+ tiempo sin comer que time_die
+		{
+			info->someone_died = 1;
+			pthread_mutex_unlock(&info->meals_death_mut);
+			print_message(&info->philos[i], "died");
+			return NULL;
+		}
+		pthread_mutex_unlock(&info->meals_death_mut);
+		i++;
+		if (i == info->num_philos)
+			i = 0;
+		usleep(500);
+	}
+	return NULL;
 }
 
 void	*philo_life(void *arg)
 {
-	t_philo *philo = (t_philo *)arg;
-	while (!philo_death() && (philo->meals_eaten < philo->info->num_meals))
+	t_philo *philo;
+	
+	philo = (t_philo *)arg;
+	while (1)
 	{
+		pthread_mutex_lock(&philo->info->meals_death_mut);
+		if (philo->info->someone_died || ((philo->meals_eaten >= philo->info->num_meals) && philo->info->num_meals != -1))
+		{
+			pthread_mutex_unlock(&philo->info->meals_death_mut);
+            break;
+		}
+		pthread_mutex_unlock(&philo->info->meals_death_mut);
 		print_message(philo, "is thinking");
+		if (philo->id % 2 == 0)
+			precise_sleep(philo->info->time_eat, philo->info);
+		//usleep(philo->id * 100);
 		if (philo->id % 2 == 0)
 		{
 			pthread_mutex_lock(philo->fork1); //esto que pasa si esta ocupado por otro? espera
@@ -58,17 +123,19 @@ void	*philo_life(void *arg)
 			pthread_mutex_lock(philo->fork1);
 			print_message(philo, "has taken a fork");
 		}
-		pthread_mutex_lock(&philo->info->write_mut);
-		philo->last_meal_time = get_time(philo->info); //mutex depende si philo_death lee
-		pthread_mutex_unlock(&philo->info->write_mut);
+		pthread_mutex_lock(&philo->info->meals_death_mut);
+		philo->last_meal_time = get_time(philo->info);
+		philo->meals_eaten++;
+		pthread_mutex_unlock(&philo->info->meals_death_mut);
 		print_message(philo, "is eating");
-		usleep(philo->info->time_eat); // usleep() usa microsegundos (?)
-		philo->meals_eaten++; //mutex de esto depende si philo_death lee
+		precise_sleep(philo->info->time_eat, philo->info);
 		pthread_mutex_unlock(philo->fork1);
 		pthread_mutex_unlock(philo->fork2);
 		print_message(philo, "is sleeping");
-		usleep(philo->info->time_sleep);
+		precise_sleep(philo->info->time_sleep, philo->info);
 	}
+	//print_message(philo, "SALE");
+	return NULL;
 }
 
 void init_threads_join(t_data *info)
@@ -81,10 +148,13 @@ void init_threads_join(t_data *info)
 	i = 0;
 	while (i < info->num_philos)
 	{
+		pthread_mutex_lock(&info->meals_death_mut);
+        info->philos[i].last_meal_time = get_time(info);
+        pthread_mutex_unlock(&info->meals_death_mut);
 		pthread_create(&info->philos[i].thread, NULL, philo_life, &info->philos[i]); //ahí sí va &thread porque estás llenando la variable, pthread_join(...) usa el valor
 		i++;
 	}
-	pthread_create(&info.dead_checker, NULL, philo_death, &info->philos[i]); //monitorea los que existen
+	pthread_create(&info->dead_checker, NULL, philo_death, info); //monitorea los que existen
 	i = 0;
 	while(i < info->num_philos)
 	{
@@ -119,7 +189,9 @@ void init_forks_and_philos(t_data *info)
 		pthread_mutex_init(&info->forks[i], NULL);
 		i++;
 	}
-	pthread_mutex_init(&info->write_mut, NULL);
+	pthread_mutex_init(&info->stdout_mut, NULL);
+	pthread_mutex_init(&info->meals_death_mut, NULL);
+	//pthread_mutex_init(&info->death_mut, NULL);
 	i = 0;
 	while (i < info->num_philos)
 	{
@@ -166,6 +238,10 @@ int	main(int argc, char **argv)
 	t_data info;
 
 	if (init_data(&info, argc, argv) == 0)
-		exit(1); //liberar memoria
+	{
+		//liberar memoria
+		exit(1);
+	}
 	init_threads_join(&info);
+	clean_resources(&info);
 }
