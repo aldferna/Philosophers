@@ -3,17 +3,29 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
+/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/15 11:29:53 by adrianafern      ###   ########.fr       */
+/*   Updated: 2025/04/15 17:50:45 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-void print_message(t_philo *philo, char *str) //con los mutex
+int check_if_dead(t_data *info)
 {
+	int death;
+
+	pthread_mutex_lock(&info->death_mut);
+	death = info->someone_died;
+	pthread_mutex_unlock(&info->death_mut);
+	return (death);
+}
+
+void print_message(t_philo *philo, char *str)
+{
+	// if (check_if_dead(philo->info))
+	// 	return;
 	pthread_mutex_lock(&philo->info->stdout_mut);
 	printf("%ld   %d %s\n", get_time(philo->info), philo->id, str);
 	pthread_mutex_unlock(&philo->info->stdout_mut);
@@ -22,18 +34,14 @@ void print_message(t_philo *philo, char *str) //con los mutex
 long get_time(t_data *info)
 {
 	struct timeval time;
-	long seconds;
-	long microsecs;
 	long milisecs_passed;
 
 	gettimeofday(&time, NULL);
-	seconds = time.tv_sec;
-	microsecs = time.tv_usec;
-	milisecs_passed = ((seconds * 1000) + (microsecs / 1000)) - info->start_time;
+	milisecs_passed = ((time.tv_sec * 1000) + (time.tv_usec / 1000)) - info->start_time;
 	return(milisecs_passed);
 }
 
-void precise_sleep(long time_in_ms, t_data *info) //puede fallar si la espera es muy larga
+void cut_sleep(long time_in_ms, t_data *info) //puede fallar si la espera es muy larga
 {
     long waiting_started;
 
@@ -54,8 +62,8 @@ void clean_resources(t_data *info)
 		i++;
 	}
     pthread_mutex_destroy(&info->stdout_mut);
-    pthread_mutex_destroy(&info->meals_death_mut);
-	//pthread_mutex_destroy(&info->death_mut);
+    pthread_mutex_destroy(&info->meals_mut);
+	pthread_mutex_destroy(&info->death_mut);
     free(info->forks);
     free(info->philos);
 }
@@ -67,39 +75,28 @@ void *philo_death(void *arg)
 
 	info = (t_data *)arg;
 	i = 0;
-	while(1) //!info->someone_died (otro !info->someone_died && i < info->num_philos)
+	while(1) //!info->someone_died (!info->someone_died && i < info->num_philos)
 	{
 		//usleep(500);
-		pthread_mutex_lock(&info->meals_death_mut);
-		if (info->someone_died)
-		{
-			pthread_mutex_unlock(&info->meals_death_mut);
+		if (check_if_dead(info))
 			return NULL;
-		}
-		if (get_time(info) - info->philos[i].last_meal_time >= info->time_die) //+ tiempo sin comer que time_die
+		pthread_mutex_lock(&info->meals_mut);
+		if (get_time(info) - info->philos[i].last_meal_time > info->time_die) //+ tiempo sin comer que time_die
 		{
+			pthread_mutex_lock(&info->death_mut);
 			info->someone_died = 1;
-			pthread_mutex_unlock(&info->meals_death_mut);
-			print_message(&info->philos[i], "died");
+			pthread_mutex_unlock(&info->death_mut);
+			pthread_mutex_unlock(&info->meals_mut);
+			print_message(&info->philos[i], "died ines");
 			return NULL;
 		}
-		pthread_mutex_unlock(&info->meals_death_mut);
+		pthread_mutex_unlock(&info->meals_mut);
 		i++;
 		if (i == info->num_philos)
 			i = 0;
-		usleep(500);
+		//usleep(500); //cambiar
 	}
 	return NULL;
-}
-
-int check_if_dead(t_data *info)
-{
-	int death;
-
-	pthread_mutex_lock(&info->meals_death_mut);
-	death = info->someone_died;
-	pthread_mutex_unlock(&info->meals_death_mut);
-	return (death);
 }
 
 void	*philo_life(void *arg)
@@ -110,19 +107,19 @@ void	*philo_life(void *arg)
 /* 	pthread_mutex_lock(&philo->info->meals_death_mut);
 	philo->last_meal_time = get_time(philo->info);
 	pthread_mutex_unlock(&philo->info->meals_death_mut); */
+	if (philo->id % 2 != 0)
+		cut_sleep(philo->info->time_eat, philo->info);
 	while (1)
 	{
-		pthread_mutex_lock(&philo->info->meals_death_mut);
-		if (philo->info->someone_died || ((philo->meals_eaten >= philo->info->num_meals) && philo->info->num_meals != -1))
+		pthread_mutex_lock(&philo->info->meals_mut);
+		if (check_if_dead(philo->info) || ((philo->meals_eaten >= philo->info->num_meals) && philo->info->num_meals != -1))
 		{
-			pthread_mutex_unlock(&philo->info->meals_death_mut);
+			pthread_mutex_unlock(&philo->info->meals_mut);
             break;
 		}
-		pthread_mutex_unlock(&philo->info->meals_death_mut);
+		pthread_mutex_unlock(&philo->info->meals_mut);
 		
-		print_message(philo, "is thinking");
-		if (philo->id % 2 == 0)
-			precise_sleep(philo->info->time_eat, philo->info);
+
 		//usleep(philo->id * 100);
 		
 		if (philo->id % 2 == 0)
@@ -130,38 +127,52 @@ void	*philo_life(void *arg)
 			if (check_if_dead(philo->info))
 				break;
 			pthread_mutex_lock(philo->fork1); //esto que pasa si esta ocupado por otro? espera
-			print_message(philo, "has taken a fork");
+			print_message(philo, "has taken a fork 1 ines");
 			pthread_mutex_lock(philo->fork2);
-			print_message(philo, "has taken a fork");
+			print_message(philo, "has taken a fork 2 ines");
 		}
 		else
 		{
 			if (check_if_dead(philo->info))
 				break;
-			//precise_sleep(philo->info->time_eat, philo->info);
+			//cut_sleep(philo->info->time_eat, philo->info);
 			pthread_mutex_lock(philo->fork2);
-			print_message(philo, "has taken a fork");
+			print_message(philo, "has taken a fork 2 ines");
 			pthread_mutex_lock(philo->fork1);
-			print_message(philo, "has taken a fork");
+			print_message(philo, "has taken a fork 1 ines");
 		}
 		
-/* 		pthread_mutex_lock(philo->fork1);
-        print_message(philo, "has taken a fork");
-        pthread_mutex_lock(philo->fork2);
-        print_message(philo, "has taken a fork"); */
+		// if (check_if_dead(philo->info))
+		// 	break;
+		// pthread_mutex_lock(philo->fork1);
+        // print_message(philo, "has taken a fork");
+        // pthread_mutex_lock(philo->fork2);
+        // print_message(philo, "has taken a fork");
 		
-		pthread_mutex_lock(&philo->info->meals_death_mut);
+		pthread_mutex_lock(&philo->info->meals_mut);
 		philo->last_meal_time = get_time(philo->info);
 		philo->meals_eaten++;
-		pthread_mutex_unlock(&philo->info->meals_death_mut);
-		print_message(philo, "is eating");
-		precise_sleep(philo->info->time_eat, philo->info);
-		pthread_mutex_unlock(philo->fork1);
-		pthread_mutex_unlock(philo->fork2);
+		pthread_mutex_unlock(&philo->info->meals_mut);
+		print_message(philo, "is eating ines");
+		cut_sleep(philo->info->time_eat, philo->info);
+		if (philo->id % 2 == 0)
+		{
+			print_message(philo, "has soltar a fork 21 ines");	
+			pthread_mutex_unlock(philo->fork1);
+			pthread_mutex_unlock(philo->fork2);
+		}
+		else
+		{
+			print_message(philo, "has soltar a fork 12 ines");	
+			pthread_mutex_unlock(philo->fork2);
+			pthread_mutex_unlock(philo->fork1);
+		}
 		print_message(philo, "is sleeping");
-		precise_sleep(philo->info->time_sleep, philo->info);
+		cut_sleep(philo->info->time_sleep, philo->info);
+		print_message(philo, "is thinking");
+		// if (philo->id % 2 == 0)
+		// 	usleep(1);
 	}
-	//print_message(philo, "SALE");
 	return NULL;
 }
 
@@ -175,9 +186,9 @@ void init_threads_join(t_data *info)
 	i = 0;
 	while (i < info->num_philos)
 	{
-		pthread_mutex_lock(&info->meals_death_mut);  //va a philo_life?
+		pthread_mutex_lock(&info->meals_mut);  //va a philo_life?
         info->philos[i].last_meal_time = get_time(info);
-        pthread_mutex_unlock(&info->meals_death_mut);
+        pthread_mutex_unlock(&info->meals_mut);
 		pthread_create(&info->philos[i].thread, NULL, philo_life, &info->philos[i]); //ahí sí va &thread porque estás llenando la variable, pthread_join(...) usa el valor
 		i++;
 	}
@@ -196,7 +207,7 @@ void init_threads_join(t_data *info)
 	t_philo philo;
 
 	memset(&philo, 0, sizeof(t_philo));
-	philo.id = i;
+	philo.id = i + 1;
 	philo.fork1 = &info->forks[i];
 	philo.fork2 = &info->forks[(i + 1) % info->num_philos];
 	philo.info = info;
@@ -217,20 +228,23 @@ void init_forks_and_philos(t_data *info)
 		i++;
 	}
 	pthread_mutex_init(&info->stdout_mut, NULL);
-	pthread_mutex_init(&info->meals_death_mut, NULL);
-	//pthread_mutex_init(&info->death_mut, NULL);
+	pthread_mutex_init(&info->meals_mut, NULL);
+	pthread_mutex_init(&info->death_mut, NULL);
 	i = 0;
 	while (i < info->num_philos)
 	{
 		memset(&philo, 0, sizeof(t_philo));
-		philo.id = i;
+		philo.id = i + 1;
 		philo.fork1 = &info->forks[i];
+	//	printf("philo %d fork1 = %d\n", philo.id, i);
 		philo.fork2 = &info->forks[(i + 1) % info->num_philos];
+	//	printf("philo %d fork2 = %d\n", philo.id, (i + 1) % info->num_philos);
 		philo.info = info;
 		info->philos[i] = philo;
 		//info->philos[i] = create_philo(info, i);
 		i++;
 	}
+	//exit(1);
 }
 
 int	init_data(t_data *info, int argc, char **argv)
@@ -250,9 +264,9 @@ int	init_data(t_data *info, int argc, char **argv)
 	}
 	memset(info, 0, sizeof(t_data));
 	info->num_philos = atoi_limit(argv[1]); // limite y vacio
-	info->time_eat = atoi_limit(argv[2]);
-	info->time_sleep = atoi_limit(argv[3]);
-	info->time_die = atoi_limit(argv[4]);
+	info->time_die = atoi_limit(argv[2]);
+	info->time_eat = atoi_limit(argv[3]);
+	info->time_sleep = atoi_limit(argv[4]);
 	info->num_meals = -1;
 	if (argc == 6)
 		info->num_meals = atoi_limit(argv[5]);
@@ -266,9 +280,23 @@ int	main(int argc, char **argv)
 
 	if (init_data(&info, argc, argv) == 0)
 	{
-		//liberar memoria
+		//liberar memoria(?)
 		exit(1);
 	}
 	init_threads_join(&info);
 	clean_resources(&info);
 }
+
+
+
+
+
+
+
+
+//un philo
+//sigue imprimiendo una vez muere
+//"verify if there is a mutex to prevent a philo from dying and starting eating at the same time"
+
+//ok
+//a death delayed by more than 10 ms is unacceptable

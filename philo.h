@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
+/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:23:42 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/14 19:33:45 by adrianafern      ###   ########.fr       */
+/*   Updated: 2025/04/15 14:21:09 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,8 @@ typedef struct s_data
 	pthread_mutex_t *forks; //array mutex forks
 	pthread_t dead_checker; //hilo monitor
 	pthread_mutex_t stdout_mut; //para no colapsar stdout con printf
-	pthread_mutex_t meals_death_mut; //para que el monitor lea ok
-	//pthread_mutex_t death_mut;
+	pthread_mutex_t meals_mut; //para que el monitor lea ok
+	pthread_mutex_t death_mut;
 	int someone_died;
 }			t_data;
 
