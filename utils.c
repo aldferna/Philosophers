@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
+/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 19:01:55 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/12 20:17:36 by adrianafern      ###   ########.fr       */
+/*   Updated: 2025/04/15 18:18:53 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ int	atoi_limit(const char *nptr)
 	i = 0;
 	if (is_space(&i, nptr) == 1)
 	{
-		printf("philos - t die - t eat - t sleep - [meals]\n");
+		printf("Please, fill all the arguments\n");
 		exit(1);
 	}
 	sign = is_sign(&i, nptr);
@@ -86,7 +86,7 @@ int	atoi_limit(const char *nptr)
 	number *= sign;
 	if (number > 2147483647 || number < 0)
 	{
-		printf("philos - t die - t eat - t sleep - [meals]\n");
+		printf("Negative or numbers out of the int limit are not allowed\n");
 		exit(1);
 	}
 	return ((int)number);

@@ -6,7 +6,7 @@
 /*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/15 17:50:45 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/15 18:32:43 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,8 @@ int check_if_dead(t_data *info)
 
 void print_message(t_philo *philo, char *str)
 {
-	// if (check_if_dead(philo->info))
-	// 	return;
+	if (check_if_dead(philo->info))
+		return;
 	pthread_mutex_lock(&philo->info->stdout_mut);
 	printf("%ld   %d %s\n", get_time(philo->info), philo->id, str);
 	pthread_mutex_unlock(&philo->info->stdout_mut);
@@ -55,6 +55,10 @@ void clean_resources(t_data *info)
     int i;
     
 	i = 0;
+	if (info->num_philos == 1)
+	{
+		pthread_mutex_destroy(&info->forks[i]);
+	} //?????
 	while (i < info->num_philos)
 	{
 		pthread_mutex_destroy(&info->forks[i]);
@@ -84,10 +88,13 @@ void *philo_death(void *arg)
 		if (get_time(info) - info->philos[i].last_meal_time > info->time_die) //+ tiempo sin comer que time_die
 		{
 			pthread_mutex_lock(&info->death_mut);
+			pthread_mutex_lock(&info->stdout_mut);
 			info->someone_died = 1;
+			printf("%ld   %d died\n", get_time(info), info->philos[i].id);
+			pthread_mutex_unlock(&info->stdout_mut);
 			pthread_mutex_unlock(&info->death_mut);
 			pthread_mutex_unlock(&info->meals_mut);
-			print_message(&info->philos[i], "died ines");
+			//print_message(&info->philos[i], "died ines");
 			return NULL;
 		}
 		pthread_mutex_unlock(&info->meals_mut);
@@ -127,9 +134,9 @@ void	*philo_life(void *arg)
 			if (check_if_dead(philo->info))
 				break;
 			pthread_mutex_lock(philo->fork1); //esto que pasa si esta ocupado por otro? espera
-			print_message(philo, "has taken a fork 1 ines");
+			print_message(philo, "has taken a fork");
 			pthread_mutex_lock(philo->fork2);
-			print_message(philo, "has taken a fork 2 ines");
+			print_message(philo, "has taken a fork");
 		}
 		else
 		{
@@ -137,9 +144,9 @@ void	*philo_life(void *arg)
 				break;
 			//cut_sleep(philo->info->time_eat, philo->info);
 			pthread_mutex_lock(philo->fork2);
-			print_message(philo, "has taken a fork 2 ines");
+			print_message(philo, "has taken a fork");
 			pthread_mutex_lock(philo->fork1);
-			print_message(philo, "has taken a fork 1 ines");
+			print_message(philo, "has taken a fork");
 		}
 		
 		// if (check_if_dead(philo->info))
@@ -153,17 +160,17 @@ void	*philo_life(void *arg)
 		philo->last_meal_time = get_time(philo->info);
 		philo->meals_eaten++;
 		pthread_mutex_unlock(&philo->info->meals_mut);
-		print_message(philo, "is eating ines");
+		print_message(philo, "is eating");
 		cut_sleep(philo->info->time_eat, philo->info);
 		if (philo->id % 2 == 0)
 		{
-			print_message(philo, "has soltar a fork 21 ines");	
+			//print_message(philo, "has soltar a fork 21 ines");	
 			pthread_mutex_unlock(philo->fork1);
 			pthread_mutex_unlock(philo->fork2);
 		}
 		else
 		{
-			print_message(philo, "has soltar a fork 12 ines");	
+			//print_message(philo, "has soltar a fork 12 ines");	
 			pthread_mutex_unlock(philo->fork2);
 			pthread_mutex_unlock(philo->fork1);
 		}
@@ -244,7 +251,6 @@ void init_forks_and_philos(t_data *info)
 		//info->philos[i] = create_philo(info, i);
 		i++;
 	}
-	//exit(1);
 }
 
 int	init_data(t_data *info, int argc, char **argv)
@@ -259,11 +265,13 @@ int	init_data(t_data *info, int argc, char **argv)
 		if (ft_strlen(argv[i]) > 11) // limite
 			return (write(2, "Error int out of limits\n", 24), 0);
 		if (!ft_isdigit(argv[i]) || !argv[i]) // solo numeros
-			return (printf("philos - t die - t eat - t sleep - [meals]\n"), 0);
+			return (printf("The program needs numerical arguments\n"), 0);
 		i++;
 	}
 	memset(info, 0, sizeof(t_data));
 	info->num_philos = atoi_limit(argv[1]); // limite y vacio
+	if (info->num_philos == 0)
+		return (printf("The program needs at least 1 philosopher\n"), 0);
 	info->time_die = atoi_limit(argv[2]);
 	info->time_eat = atoi_limit(argv[3]);
 	info->time_sleep = atoi_limit(argv[4]);
@@ -272,6 +280,11 @@ int	init_data(t_data *info, int argc, char **argv)
 		info->num_meals = atoi_limit(argv[5]);
 	init_forks_and_philos(info);
 	return (1);
+}
+
+void one_philo(t_data info) //hay quee crear un thread por filo, tantos tenedores como hilos
+{
+	printf("%d   1 died\n", info.time_die); //no valee
 }
 
 int	main(int argc, char **argv)
@@ -283,7 +296,10 @@ int	main(int argc, char **argv)
 		//liberar memoria(?)
 		exit(1);
 	}
-	init_threads_join(&info);
+	if (info.num_philos == 1)
+		one_philo(info);
+	else
+		init_threads_join(&info);
 	clean_resources(&info);
 }
 
@@ -291,12 +307,12 @@ int	main(int argc, char **argv)
 
 
 
-
-
+//checkear leaks
 
 //un philo
-//sigue imprimiendo una vez muere
 //"verify if there is a mutex to prevent a philo from dying and starting eating at the same time"
 
 //ok
 //a death delayed by more than 10 ms is unacceptable
+//sigue imprimiendo una vez muere
+//segfault si 0 philos
