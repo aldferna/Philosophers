@@ -6,7 +6,7 @@
 /*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/15 18:32:43 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/17 20:12:54 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,10 +55,11 @@ void clean_resources(t_data *info)
     int i;
     
 	i = 0;
-	if (info->num_philos == 1)
-	{
-		pthread_mutex_destroy(&info->forks[i]);
-	} //?????
+	// if (info->num_philos == 1)
+	// {
+	// 	pthread_mutex_destroy(&info->philos[0].fork1);
+	// 	return;
+	// } //?????
 	while (i < info->num_philos)
 	{
 		pthread_mutex_destroy(&info->forks[i]);
@@ -282,14 +283,23 @@ int	init_data(t_data *info, int argc, char **argv)
 	return (1);
 }
 
-void one_philo(t_data info) //hay quee crear un thread por filo, tantos tenedores como hilos
+void *one_philo(void *arg) //hay quee crear un thread por filo, tantos tenedores como hilos
 {
-	printf("%d   1 died\n", info.time_die); //no valee
+	t_philo *philo;
+
+	philo = (t_philo *)arg;
+	pthread_mutex_lock(philo->fork1);
+	print_message(philo, "has taken a fork");
+	cut_sleep(philo->info->time_die, philo->info);
+	pthread_mutex_unlock(philo->fork1);
+	print_message(philo, "has died");
+	return NULL;
 }
 
 int	main(int argc, char **argv)
 {
 	t_data info;
+	struct timeval time;
 
 	if (init_data(&info, argc, argv) == 0)
 	{
@@ -297,7 +307,12 @@ int	main(int argc, char **argv)
 		exit(1);
 	}
 	if (info.num_philos == 1)
-		one_philo(info);
+	{
+		gettimeofday(&time, NULL);
+		info.start_time = ((time.tv_sec * 1000) + (time.tv_usec / 1000));
+		pthread_create(&info.philos[0].thread, NULL, one_philo, &info.philos[0]);
+		pthread_join(info.philos[0].thread, NULL);
+	}
 	else
 		init_threads_join(&info);
 	clean_resources(&info);
@@ -309,10 +324,10 @@ int	main(int argc, char **argv)
 
 //checkear leaks
 
-//un philo
 //"verify if there is a mutex to prevent a philo from dying and starting eating at the same time"
 
 //ok
+//un philo
 //a death delayed by more than 10 ms is unacceptable
 //sigue imprimiendo una vez muere
 //segfault si 0 philos
