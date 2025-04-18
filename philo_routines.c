@@ -3,14 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   philo_routines.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 12:39:45 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/18 19:35:27 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/18 21:32:27 by adrianafern      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
+
+void print_and_flag_death(t_data *info, int i)
+{
+	pthread_mutex_lock(&info->death_mut);
+	pthread_mutex_lock(&info->stdout_mut);
+	info->someone_died = 1;
+	printf("%ld   %d died\n", get_time(info), info->philos[i].id);
+	pthread_mutex_unlock(&info->stdout_mut);
+	pthread_mutex_unlock(&info->death_mut);
+}
 
 void	*philo_death(void *arg)
 {
@@ -23,16 +33,9 @@ void	*philo_death(void *arg)
 	{
 		pthread_mutex_lock(&info->meals_mut);
 		if (get_time(info) - info->philos[i].last_meal_time > info->time_die)
-		{
-			pthread_mutex_lock(&info->death_mut);
-			pthread_mutex_lock(&info->stdout_mut);
+		{	
 			if (info->philos[i].meals_eaten < info->num_meals || info->num_meals == -1)
-			{
-				info->someone_died = 1;
-				printf("%ld   %d died\n", get_time(info), info->philos[i].id);
-			}
-			pthread_mutex_unlock(&info->stdout_mut);
-			pthread_mutex_unlock(&info->death_mut);
+				printf_and_flag_death(info, i);
 			pthread_mutex_unlock(&info->meals_mut);
 			return (NULL);
 		}
@@ -41,7 +44,6 @@ void	*philo_death(void *arg)
 		if (i == info->num_philos)
 			i = 0;
 	}
-	return (NULL);
 }
 
 int	philo_take_forks(t_philo *philo)
@@ -110,18 +112,5 @@ void	*philo_life(void *arg)
 		cut_sleep(philo->info->time_sleep, philo->info);
 		print_message(philo, "is thinking");
 	}
-	return (NULL);
-}
-
-void	*one_philo(void *arg)
-{
-	t_philo	*philo;
-
-	philo = (t_philo *)arg;
-	pthread_mutex_lock(philo->fork1);
-	print_message(philo, "has taken a fork");
-	cut_sleep(philo->info->time_die, philo->info);
-	pthread_mutex_unlock(philo->fork1);
-	print_message(philo, "died");
 	return (NULL);
 }

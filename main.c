@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/18 17:31:48 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/18 21:33:02 by adrianafern      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,13 +97,26 @@ int	init_data(t_data *info, int argc, char **argv)
 	return (1);
 }
 
+void	*one_philo(void *arg)
+{
+	t_philo	*philo;
+
+	philo = (t_philo *)arg;
+	pthread_mutex_lock(philo->fork1);
+	print_message(philo, "has taken a fork");
+	cut_sleep(philo->info->time_die, philo->info);
+	pthread_mutex_unlock(philo->fork1);
+	print_message(philo, "died");
+	return (NULL);
+}
+
 int	main(int argc, char **argv)
 {
 	t_data			info;
 	struct timeval	time;
 
 	if (init_data(&info, argc, argv) == 0)
-		exit(1);
+		return(clean_resources(&info), 1);
 	if (info.num_philos == 1)
 	{
 		gettimeofday(&time, NULL);
@@ -117,9 +130,10 @@ int	main(int argc, char **argv)
 	clean_resources(&info);
 }
 
+
+
+//leaks?
+//norminette
 //➜  juan git:(master) ✗ ./philo 5 800 200 200 7 | grep "eating" | wc -l
 //35
-
-//no debe morir (en el philo_death tengo que chequear tb que hayan comido las comidas)
-
-//el exit
+//comprueba tests
