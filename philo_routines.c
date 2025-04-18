@@ -6,7 +6,7 @@
 /*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 12:39:45 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/18 15:44:52 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/18 19:35:27 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,11 @@ void	*philo_death(void *arg)
 		{
 			pthread_mutex_lock(&info->death_mut);
 			pthread_mutex_lock(&info->stdout_mut);
-			info->someone_died = 1;
-			printf("%ld   %d died\n", get_time(info), info->philos[i].id);
+			if (info->philos[i].meals_eaten < info->num_meals || info->num_meals == -1)
+			{
+				info->someone_died = 1;
+				printf("%ld   %d died\n", get_time(info), info->philos[i].id);
+			}
 			pthread_mutex_unlock(&info->stdout_mut);
 			pthread_mutex_unlock(&info->death_mut);
 			pthread_mutex_unlock(&info->meals_mut);

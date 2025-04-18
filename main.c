@@ -6,7 +6,7 @@
 /*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/18 15:51:50 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/18 17:31:48 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,3 +116,10 @@ int	main(int argc, char **argv)
 		init_threads_join(&info);
 	clean_resources(&info);
 }
+
+//➜  juan git:(master) ✗ ./philo 5 800 200 200 7 | grep "eating" | wc -l
+//35
+
+//no debe morir (en el philo_death tengo que chequear tb que hayan comido las comidas)
+
+//el exit
