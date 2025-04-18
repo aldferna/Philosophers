@@ -3,19 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
+/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/18 13:25:57 by adrianafern      ###   ########.fr       */
+/*   Updated: 2025/04/18 15:51:50 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-void init_threads_join(t_data *info)
+void	init_threads_join(t_data *info)
 {
-	int i;
-	struct timeval time;
+	int				i;
+	struct timeval	time;
 
 	gettimeofday(&time, NULL);
 	info->start_time = (time.tv_sec * 1000) + (time.tv_usec / 1000);
@@ -23,14 +23,15 @@ void init_threads_join(t_data *info)
 	while (i < info->num_philos)
 	{
 		pthread_mutex_lock(&info->meals_mut);
-        info->philos[i].last_meal_time = get_time(info);
-        pthread_mutex_unlock(&info->meals_mut);
-		pthread_create(&info->philos[i].thread, NULL, philo_life, &info->philos[i]);
+		info->philos[i].last_meal_time = get_time(info);
+		pthread_mutex_unlock(&info->meals_mut);
+		pthread_create(&info->philos[i].thread, NULL, philo_life,
+			&info->philos[i]);
 		i++;
 	}
 	pthread_create(&info->dead_checker, NULL, philo_death, info);
 	i = 0;
-	while(i < info->num_philos)
+	while (i < info->num_philos)
 	{
 		pthread_join(info->philos[i].thread, NULL);
 		i++;
@@ -38,10 +39,10 @@ void init_threads_join(t_data *info)
 	pthread_join(info->dead_checker, NULL);
 }
 
-void init_forks_and_philos(t_data *info)
+void	init_forks_and_philos(t_data *info)
 {
-	int i;
-	t_philo philo;
+	int		i;
+	t_philo	philo;
 
 	info->forks = malloc(info->num_philos * sizeof(pthread_mutex_t));
 	info->philos = malloc(info->num_philos * sizeof(t_philo));
@@ -76,14 +77,14 @@ int	init_data(t_data *info, int argc, char **argv)
 	i = 1;
 	while (argv[i])
 	{
-		if (ft_strlen(argv[i]) > 11) // limite
+		if (ft_strlen(argv[i]) > 11)
 			return (write(2, "Error int out of limits\n", 24), 0);
-		if (!ft_isdigit(argv[i]) || !argv[i]) // solo numeros
+		if (!ft_isdigit(argv[i]) || !argv[i])
 			return (printf("The program needs numerical arguments\n"), 0);
 		i++;
 	}
 	memset(info, 0, sizeof(t_data));
-	info->num_philos = atoi_limit(argv[1]); // limite y vacio
+	info->num_philos = atoi_limit(argv[1]);
 	if (info->num_philos == 0)
 		return (printf("The program needs at least 1 philosopher\n"), 0);
 	info->time_die = atoi_limit(argv[2]);
@@ -98,8 +99,8 @@ int	init_data(t_data *info, int argc, char **argv)
 
 int	main(int argc, char **argv)
 {
-	t_data info;
-	struct timeval time;
+	t_data			info;
+	struct timeval	time;
 
 	if (init_data(&info, argc, argv) == 0)
 		exit(1);
@@ -107,20 +108,11 @@ int	main(int argc, char **argv)
 	{
 		gettimeofday(&time, NULL);
 		info.start_time = ((time.tv_sec * 1000) + (time.tv_usec / 1000));
-		pthread_create(&info.philos[0].thread, NULL, one_philo, &info.philos[0]);
+		pthread_create(&info.philos[0].thread, NULL, one_philo,
+			&info.philos[0]);
 		pthread_join(info.philos[0].thread, NULL);
 	}
 	else
 		init_threads_join(&info);
 	clean_resources(&info);
 }
-
-
-
-//ok
-//"verify if there is a mutex to prevent a philo from dying and starting eating at the same time"
-//checkear leaks
-//un philo
-//a death delayed by more than 10 ms is unacceptable
-//sigue imprimiendo una vez muere
-//segfault si 0 philos
