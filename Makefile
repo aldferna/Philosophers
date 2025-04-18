@@ -1,8 +1,8 @@
 NAME = philo
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -g3  -fsanitize=thread #-fsanitize=address
+CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=address #-fsanitize=thread
 RM = rm -f
-SRC = main.c utils.c utils_philo.c \
+SRC = main.c utils.c utils_philo.c philo_routines.c\
 
 OBJ = $(SRC:.c=.o)
 

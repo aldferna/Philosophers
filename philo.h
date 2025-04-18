@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:23:42 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/15 14:21:09 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/18 13:09:15 by adrianafern      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,9 +50,17 @@ typedef struct s_philo
 
 // comer -> dormir -> pensar
 
-//	PROJECT UTILS
+//	PHILO ROUTINES
+void *one_philo(void *arg);
+void	*philo_life(void *arg);
+void *philo_death(void *arg);
+
+//	PHILO UTILS
+int check_if_dead(t_data *info);
 long get_time(t_data *info);
-void print_message(t_philo *philo, char *str);
+void print_message(t_philo *philo, char *str, int true);
+void cut_sleep(long time_in_ms, t_data *info);
+void clean_resources(t_data *info);
 
 //  BASIC UTILS 
 int			atoi_limit(const char *nptr);
