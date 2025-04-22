@@ -6,7 +6,7 @@
 /*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 19:01:55 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/15 18:18:53 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/22 18:41:14 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ int	ft_isdigit(char *str)
 	return (1);
 }
 
-int	ft_strlen(char *str)
+int	ft_strlen(const char *str)
 {
 	int	i;
 
@@ -71,10 +71,10 @@ int	atoi_limit(const char *nptr)
 	long	number;
 
 	i = 0;
-	if (is_space(&i, nptr) == 1)
+	if (is_space(&i, nptr) == 1 || ft_strlen(nptr) > 11)
 	{
-		printf("Please, fill all the arguments\n");
-		exit(1);
+		printf("Empty arguments or out of limits int are not allowed\n");
+		return -5;
 	}
 	sign = is_sign(&i, nptr);
 	number = 0;
@@ -87,7 +87,7 @@ int	atoi_limit(const char *nptr)
 	if (number > 2147483647 || number < 0)
 	{
 		printf("Negative or numbers out of the int limit are not allowed\n");
-		exit(1);
+		return -5;
 	}
 	return ((int)number);
 }

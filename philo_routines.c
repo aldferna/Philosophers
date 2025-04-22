@@ -6,7 +6,7 @@
 /*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 12:39:45 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/22 13:49:16 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/22 18:07:37 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,20 +51,20 @@ int	philo_take_forks(t_philo *philo)
 {
 	if (check_if_dead(philo->info))
 		return (1);
-	if (philo->id % 2 == 0)
-	{
-		pthread_mutex_lock(philo->fork1);
-		print_message(philo, "has taken a fork");
-		pthread_mutex_lock(philo->fork2);
-		print_message(philo, "has taken a fork");
-	}
-	else
-	{
-		pthread_mutex_lock(philo->fork2);
-		print_message(philo, "has taken a fork");
-		pthread_mutex_lock(philo->fork1);
-		print_message(philo, "has taken a fork");
-	}
+	//if (philo->id % 2 == 0)
+	//{
+	pthread_mutex_lock(philo->fork1);
+	print_message(philo, "has taken a fork");
+	pthread_mutex_lock(philo->fork2);
+	print_message(philo, "has taken a fork");
+	//}
+	// else
+	// {
+	// 	pthread_mutex_lock(philo->fork2);
+	// 	print_message(philo, "has taken a fork");
+	// 	pthread_mutex_lock(philo->fork1);
+	// 	print_message(philo, "has taken a fork");
+	// }
 	return (0);
 }
 
@@ -76,16 +76,16 @@ void	philo_eat(t_philo *philo)
 	pthread_mutex_unlock(&philo->info->meals_mut);
 	print_message(philo, "is eating");
 	cut_sleep(philo->info->time_eat, philo->info);
-	if (philo->id % 2 == 0)
-	{
+	//if (philo->id % 2 == 0)
+	//{
 		pthread_mutex_unlock(philo->fork1);
 		pthread_mutex_unlock(philo->fork2);
-	}
-	else
-	{
-		pthread_mutex_unlock(philo->fork2);
-		pthread_mutex_unlock(philo->fork1);
-	}
+	//}
+	// else
+	// {
+	// 	pthread_mutex_unlock(philo->fork2);
+	// 	pthread_mutex_unlock(philo->fork1);
+	// }
 }
 
 void	*philo_life(void *arg)

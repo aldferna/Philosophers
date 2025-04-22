@@ -6,7 +6,7 @@
 /*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/22 13:52:40 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/22 18:41:55 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,14 @@ void	init_forks_and_philos(t_data *info)
 	}
 }
 
+int	check_for_exit_signal(t_data info)
+{
+	if (info.num_philos == -5 || info.time_die == -5 || info.time_eat == -5
+		|| info.time_sleep == -5 || info.num_meals == -5)
+		return (0);
+	return (1);
+}
+
 int	init_data(t_data *info, int argc, char **argv)
 {
 	int	i;
@@ -77,8 +85,8 @@ int	init_data(t_data *info, int argc, char **argv)
 	i = 1;
 	while (argv[i])
 	{
-		if (ft_strlen(argv[i]) > 11)
-			return (write(2, "Error int out of limits\n", 24), 0);
+		// if (ft_strlen(argv[i]) > 11)
+		// 	return (write(2, "Error int out of limits\n", 24), 0);
 		if (!ft_isdigit(argv[i]) || !argv[i])
 			return (printf("The program needs numerical arguments\n"), 0);
 		i++;
@@ -93,6 +101,8 @@ int	init_data(t_data *info, int argc, char **argv)
 	info->num_meals = -1;
 	if (argc == 6)
 		info->num_meals = atoi_limit(argv[5]);
+	if (check_for_exit_signal(*info) == 0)
+		return (0);
 	init_forks_and_philos(info);
 	return (1);
 }
@@ -129,3 +139,23 @@ int	main(int argc, char **argv)
 		init_threads_join(&info);
 	clean_resources(&info);
 }
+
+// exits!!!
+
+//   463  ./philo 3 310 104 103 2  (el 3o en comer muere)
+// 0 1 come
+// 104 2 come
+// 208 3 come (207 1 libre)
+// 312 1 come (1 muere xq fork queda libre en el 312 > 310)
+// 416 2 come
+// 520 3 come
+
+//   466  ./philo 3 310 103 103 15  (comen todos OK) 103 * 3 = 309 < 310
+
+//   467  ./philo 3 310 103 103 (infinito)
+
+//   477  ./philo 3 411 103 103 2 (wc -l 6)
+//   479  ./philo 3 412 103 103 20 (wc -l 60)
+//   481  ./philo 20 411 103 103 20 (wc -l 400)
+
+//   484  ./philo 39 810 200 200 (infinito)

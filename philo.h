@@ -6,7 +6,7 @@
 /*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:23:42 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/18 15:40:54 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/22 18:36:26 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ void				clean_resources(t_data *info);
 
 //  BASIC UTILS
 int					atoi_limit(const char *nptr);
-int					ft_strlen(char *str);
+int					ft_strlen(const char *str);
 int					ft_isdigit(char *str);
 
 #endif
