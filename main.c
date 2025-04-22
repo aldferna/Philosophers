@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/22 18:41:55 by aldferna         ###   ########.fr       */
+/*   Updated: 2025/04/22 22:01:57 by adrianafern      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,8 +85,6 @@ int	init_data(t_data *info, int argc, char **argv)
 	i = 1;
 	while (argv[i])
 	{
-		// if (ft_strlen(argv[i]) > 11)
-		// 	return (write(2, "Error int out of limits\n", 24), 0);
 		if (!ft_isdigit(argv[i]) || !argv[i])
 			return (printf("The program needs numerical arguments\n"), 0);
 		i++;
@@ -107,26 +105,13 @@ int	init_data(t_data *info, int argc, char **argv)
 	return (1);
 }
 
-void	*one_philo(void *arg)
-{
-	t_philo	*philo;
-
-	philo = (t_philo *)arg;
-	pthread_mutex_lock(philo->fork1);
-	print_message(philo, "has taken a fork");
-	cut_sleep(philo->info->time_die, philo->info);
-	pthread_mutex_unlock(philo->fork1);
-	print_message(philo, "died");
-	return (NULL);
-}
-
 int	main(int argc, char **argv)
 {
 	t_data			info;
 	struct timeval	time;
 
 	if (init_data(&info, argc, argv) == 0)
-		return (clean_resources(&info), 1);
+		return (free(info.forks), free(info.philos), 1);
 	if (info.num_philos == 1)
 	{
 		gettimeofday(&time, NULL);
@@ -140,7 +125,7 @@ int	main(int argc, char **argv)
 	clean_resources(&info);
 }
 
-// exits!!!
+//norminette y carpeta!
 
 //   463  ./philo 3 310 104 103 2  (el 3o en comer muere)
 // 0 1 come
