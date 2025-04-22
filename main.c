@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
+/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/06 18:18:12 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/18 21:33:02 by adrianafern      ###   ########.fr       */
+/*   Updated: 2025/04/22 13:52:40 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,7 @@ int	main(int argc, char **argv)
 	struct timeval	time;
 
 	if (init_data(&info, argc, argv) == 0)
-		return(clean_resources(&info), 1);
+		return (clean_resources(&info), 1);
 	if (info.num_philos == 1)
 	{
 		gettimeofday(&time, NULL);
@@ -129,11 +129,3 @@ int	main(int argc, char **argv)
 		init_threads_join(&info);
 	clean_resources(&info);
 }
-
-
-
-//leaks?
-//norminette
-//➜  juan git:(master) ✗ ./philo 5 800 200 200 7 | grep "eating" | wc -l
-//35
-//comprueba tests

@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   philo_routines.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrianafernandez <adrianafernandez@stud    +#+  +:+       +#+        */
+/*   By: aldferna <aldferna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 12:39:45 by adrianafern       #+#    #+#             */
-/*   Updated: 2025/04/18 21:32:27 by adrianafern      ###   ########.fr       */
+/*   Updated: 2025/04/22 13:49:16 by aldferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-void print_and_flag_death(t_data *info, int i)
+void	print_and_flag_death(t_data *info, int i)
 {
 	pthread_mutex_lock(&info->death_mut);
 	pthread_mutex_lock(&info->stdout_mut);
@@ -33,9 +33,10 @@ void	*philo_death(void *arg)
 	{
 		pthread_mutex_lock(&info->meals_mut);
 		if (get_time(info) - info->philos[i].last_meal_time > info->time_die)
-		{	
-			if (info->philos[i].meals_eaten < info->num_meals || info->num_meals == -1)
-				printf_and_flag_death(info, i);
+		{
+			if (info->philos[i].meals_eaten < info->num_meals
+				|| info->num_meals == -1)
+				print_and_flag_death(info, i);
 			pthread_mutex_unlock(&info->meals_mut);
 			return (NULL);
 		}
