@@ -1,6 +1,6 @@
 # 42 Cursus
 
-## Philosophers 😏
+## Philosophers 😎
 
 The philosophers project challenges you to simulate the dining philosophers problem using parallel threads.  
 The problem involves a group of philosophers sitting around a dining table, each thinking, eating and sleeping. To eat, a philosopher must use two forks, the one on their left and the one on their right. You have to avoid deadlocks and data races.  
@@ -22,5 +22,5 @@ make
 ```
 
 ## Visualizer
-You can visualize the result copy-pasting the result [here](https://nafuka11.github.io/philosophers-visualizer/).  
+You can visualize the result by copy-pasting the output [here](https://nafuka11.github.io/philosophers-visualizer/).  
 
